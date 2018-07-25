@@ -1,18 +1,36 @@
 //
 //  main.m
-//  NSCodingGenerator
+//  iCodeGenerator
 //
-//  Created by Ma Jianglin on 4/27/13.
-//  Copyright (c) 2013 Ma Jianglin. All rights reserved.
+//  Created by majianglin on 2018/7/25.
+//  Copyright © 2018 Totem. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+#import "NSCodingGenerator.h"
+#import "JSONParserGenerator.h"
+#import "PropertiesGenerator.h"
 
-#import "AppDelegate.h"
+#import "DataModel.h"
+#import "HFCustomer.h"
 
-int main(int argc, char *argv[])
-{
+
+int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+        
+        Class clazz = [HFCustomer class];
+        
+        NSString *str = [PropertiesGenerator propertiesForClass:clazz];
+        NSLog(@"%@", str);
+        
+//        NSString *str2 = [NSCodingGenerator decodeForClass:clazz];
+//        NSLog(@"%@", str2);
+//
+//        NSString *str3 = [NSCodingGenerator encodeForClass:clazz];
+//        NSLog(@"%@", str3);
+        
+        NSString *str4 = [JSONParserGenerator parserForClass:clazz];
+        NSLog(@"%@", str4);
     }
+    return 0;
 }

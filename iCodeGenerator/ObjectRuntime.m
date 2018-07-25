@@ -12,86 +12,93 @@
 
 @implementation ObjectRuntime
 
-+ (NSMutableDictionary*)ivarForClass:(Class)klass
-{
-    NSMutableDictionary *results = [[NSMutableDictionary alloc] init];
-    
-    unsigned int varCount;
-    
-    Ivar *vars = class_copyIvarList(klass, &varCount);
-    
-    for (int i = 0; i < varCount; i++)
-    {
-        Ivar var = vars[i];
-        
-        const char* name = ivar_getName(var);
-        const char* typeEncoding = ivar_getTypeEncoding(var);
-        
-        [results setObject:[NSString stringWithCString:typeEncoding encoding:NSUTF8StringEncoding]
-                    forKey:[NSString stringWithCString:name encoding:NSUTF8StringEncoding]];
+static const char *getPropertyType(objc_property_t property) {
+    const char *attributes = property_getAttributes(property);
+    //printf("attributes=%s\n", attributes);
+    char buffer[1 + strlen(attributes)];
+    strcpy(buffer, attributes);
+    char *state = buffer, *attribute;
+    while ((attribute = strsep(&state, ",")) != NULL) {
+        if (attribute[0] == 'T' && attribute[1] != '@') {
+            // it's a C primitive type:
+            /*
+             if you want a list of what will be returned for these primitives, search online for
+             "objective-c" "Property Attribute Description Examples"
+             apple docs list plenty of examples of what you get for int "i", long "l", unsigned "I", struct, etc.
+             */
+            NSString *name = [[NSString alloc] initWithBytes:attribute + 1 length:strlen(attribute) - 1 encoding:NSASCIIStringEncoding];
+            return (const char *)[name cStringUsingEncoding:NSASCIIStringEncoding];
+        }
+        else if (attribute[0] == 'T' && attribute[1] == '@' && strlen(attribute) == 2) {
+            // it's an ObjC id type:
+            return "id";
+        }
+        else if (attribute[0] == 'T' && attribute[1] == '@') {
+            // it's another ObjC object type:
+            NSString *name = [[NSString alloc] initWithBytes:attribute + 3 length:strlen(attribute) - 4 encoding:NSASCIIStringEncoding];
+            return (const char *)[name cStringUsingEncoding:NSASCIIStringEncoding];
+        }
     }
-    
-    free(vars);
-    
-    return results;
+    return "";
 }
 
-+ (NSString*)nameForType:(NSString*)type
+
++ (NSDictionary *)classPropertiesFor:(Class)clazz
 {
-    NSString *name = @"id";
-    switch ([type characterAtIndex:0])
-    {
-        case '@':   // object
-            if ([[type componentsSeparatedByString:@"\""] count] > 1)
-            {
-                name = [[type componentsSeparatedByString:@"\""] objectAtIndex:1];
-            }
-            break;
-        case 'B':   //_Bool or bool in C/C++
-            name = @"_Bool";
-            break;
-        case 'i':
-            name = @"int";
-            break;
-        case 'f':
-            name = @"float";
-            break;
-        case 'd':
-            name = @"double";
-            break;
-        case 'c':   // char, but the BOOL is char
-            name = @"BOOL";
-            break;
-            //        case 'c':   // char, but the BOOL is char
-            //            name = @"char";
-            //            break;
-        case 'C':   // unsigned char
-            name = @"unsigned char";
-            break;
-        case 'I':   // unsigned int
-            name = @"unsigned int";
-            break;
-        case 's':   // short
-            name = @"short";
-            break;
-        case 'S':   // unsigned short
-            name = @"unsigned short";
-            break;
-        case 'l':   // long
-            name = @"long";
-            break;
-        case 'L':   // unsigned long
-            name = @"unsigned long";
-            break;
-        case 'q':   // long long
-            name = @"long long";
-            break;
-        case 'Q':   // unsigned long long
-            name = @"unsigned long long";
-            break;
+    if (clazz == NULL) {
+        return nil;
     }
     
-    return name;
+    NSMutableDictionary *results = [[NSMutableDictionary alloc] init];
+    
+    unsigned int outCount, i;
+    objc_property_t *properties = class_copyPropertyList(clazz, &outCount);
+    for (i = 0; i < outCount; i++) {
+        objc_property_t property = properties[i];
+        const char *propName = property_getName(property);
+        if(propName) {
+            const char *propType = getPropertyType(property);
+            NSString *propertyName = [NSString stringWithUTF8String:propName];
+            NSString *propertyType = [NSString stringWithUTF8String:propType];
+            [results setObject:propertyType forKey:propertyName];
+        }
+    }
+    free(properties);
+    
+    // returning a copy here to make sure the dictionary is immutable
+    return [NSDictionary dictionaryWithDictionary:results];
+}
+
+// Ref https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html
+
++ (NSDictionary*) typeDictionary
+{
+    NSDictionary *dict = @{@"c":@"char",
+                           @"i":@"int",
+                           @"s":@"short",
+                           @"l":@"long",
+                           @"q":@"long long",
+                           @"C":@"unsigned char",
+                           @"I":@"unsigned int",
+                           @"S":@"unsigned short",
+                           @"L":@"unsigned long",
+                           @"Q":@"unsigned long long",
+                           @"f":@"float",
+                           @"d":@"double",
+                           @"B":@"_Bool",
+                           @"v":@"void",
+                           @"*":@"char *",
+                           @"@":@"id",
+                           @"#":@"Class",
+                           @":":@"SEL",
+                           @"[array type]":@"NSArray",
+                           @"{name=type...}":@"structure",
+                           @"(name=type...)":@"union",
+                           @"bnum":@"A bit field of num bits",
+                           @"^type":@"指针",
+                           @"?":@"unknown",
+                           };
+    return dict;
 }
 
 

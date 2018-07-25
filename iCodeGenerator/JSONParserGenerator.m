@@ -11,75 +11,67 @@
 
 @implementation JSONParserGenerator
 
-+ (NSString*)parseIvar:(NSString*)name withType:(NSString*)type
++ (NSString*)parseProperties:(NSString*)name forType:(NSString*)type
 {
     //    NSLog(@"type=%@, name=%@", type, name);
     
     NSString *translateString = nil;
     
-    switch ([type characterAtIndex:0])
-    {
-        case '@':   // object
-            if ([[type componentsSeparatedByString:@"\""] count] > 1)
-            {
-                NSString *className = [[type componentsSeparatedByString:@"\""] objectAtIndex:1];
-                Class class = NSClassFromString(className);
-                if ([class isSubclassOfClass:[NSString class]]
-                    || [class isSubclassOfClass:[NSArray class]]
-                    || [class isSubclassOfClass:[NSDictionary class]])
-                {
-                    //do nothing
-                }
-                else
-                {
-                    
-                }
-            }
-            break;
-        case 'B':   //_Bool or bool in C/C++
-            translateString = @"intValue";
-            break;
-        case 'i':
-            translateString = @"intValue";
-            break;
-        case 'f':
-            translateString = @"floatValue";
-            break;
-        case 'd':
-            translateString = @"doubleValue";
-            break;
-        case 'c':   // char, but the BOOL is char
-            translateString = @"boolValue";
-            break;
-//        case 'c':   // char, but the BOOL is char
-//            translateString = @"charValue";
-//            break;
-        case 'C':   // unsigned char
-            translateString = @"unsignedCharValue";
-            break;
-        case 'I':   // unsigned int
-            translateString = @"unsignedIntValue";
-            break;
-        case 's':   // short
-            translateString = @"shortValue";
-            break;
-        case 'S':   // unsigned short
-            translateString = @"unsignedShortValue";
-            break;
-        case 'l':   // long
-            translateString = @"longValue";
-            break;
-        case 'L':   // unsigned long
-            translateString = @"unsignedLongValue";
-            break;
-        case 'q':   // long long
-            translateString = @"longLongValue";
-            break;
-        case 'Q':   // unsigned long long
-            translateString = @"unsignedLongLongValue";
-            break;
-    }
+    NSLog(@"%@=%@", name, type);
     
+    if([@"NSString" isEqualToString:type] || [@"NSDictionary" isEqualToString:type])
+    {
+        
+    }
+    else if([@"NSArray" isEqualToString:type])
+    {
+        
+    }
+    else if([@"c" isEqualToString:type])
+    {
+        translateString = @"boolValue";
+    }
+    else if([@"i" isEqualToString:type])
+    {
+        translateString = @"intValue";
+    }
+    else if([@"f" isEqualToString:type])
+    {
+        translateString = @"floatValue";
+    }
+    else if([@"d" isEqualToString:type])
+    {
+        translateString = @"doubleValue";
+    }
+    else if([@"I" isEqualToString:type])
+    {
+        translateString = @"unsignedIntValue";
+    }
+    else if([@"l" isEqualToString:type])
+    {
+        translateString = @"longValue";
+    }
+    else if([@"L" isEqualToString:type])
+    {
+        translateString = @"unsignedLongValue";
+    }
+    else if([@"q" isEqualToString:type])
+    {
+        translateString = @"longLongValue";
+    }
+    else if([@"Q" isEqualToString:type])
+    {
+        translateString = @"unsignedLongLongValue";
+    }
+    else if([@"l" isEqualToString:type])
+    {
+        translateString = @"longValue";
+    }
+    else if([@"l" isEqualToString:type])
+    {
+        translateString = @"longValue";
+    }
+
     NSString *result;
     
     
@@ -104,12 +96,11 @@
     [result appendString:@"    if (self)\n"];
     [result appendString:@"    {\n"];
     
-    NSDictionary *ivarDict = [ObjectRuntime ivarForClass:clazz];
-    for (NSString *key in ivarDict)
+    NSDictionary *properties = [ObjectRuntime classPropertiesFor:clazz];
+    for (NSString *key in properties)
     {
-        NSString *type = [ivarDict objectForKey:key];
-        
-		[result appendString:[[self class] parseIvar:key withType:type]];
+        NSString *type = [properties objectForKey:key];
+        [result appendString:[[self class] parseProperties:key forType:type]];
     }
     
     

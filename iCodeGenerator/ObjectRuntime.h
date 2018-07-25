@@ -10,8 +10,6 @@
 
 @interface ObjectRuntime : NSObject
 
-+ (NSString*)nameForType:(NSString*)type;
-
-+ (NSMutableDictionary*)ivarForClass:(Class)klass;
++ (NSDictionary *)classPropertiesFor:(Class)clazz;
 
 @end

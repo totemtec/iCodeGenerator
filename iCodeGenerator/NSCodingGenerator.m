@@ -185,7 +185,7 @@
     [result appendString:@"{\n"];
     
     
-    NSDictionary *ivarDict = [ObjectRuntime ivarForClass:clazz];
+    NSDictionary *ivarDict = [ObjectRuntime classPropertiesFor:clazz];
     for (NSString *key in ivarDict)
     {
         NSString *type = [ivarDict objectForKey:key];
@@ -206,7 +206,7 @@
     [result appendString:@"    if (self)\n"];
     [result appendString:@"    {\n"];
     
-    NSDictionary *ivarDict = [ObjectRuntime ivarForClass:clazz];
+    NSDictionary *ivarDict = [ObjectRuntime classPropertiesFor:clazz];
     for (NSString *key in ivarDict)
     {
         NSString *type = [ivarDict objectForKey:key];

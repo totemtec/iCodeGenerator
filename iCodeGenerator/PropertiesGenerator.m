@@ -14,21 +14,23 @@
 + (NSString*)propertiesForClass:(Class)clazz
 {
     NSMutableString *result = [NSMutableString stringWithString:@"\n"];
-    NSDictionary *ivarDict = [ObjectRuntime ivarForClass:clazz];
-    for (NSString *key in ivarDict)
-    {
-        NSString *type = [ivarDict objectForKey:key];
-        
-        if ([type characterAtIndex:0] == '@')
-        {
-            [result appendFormat:@"@property (strong, nonatomic) %@ *%@;\n", [ObjectRuntime nameForType:type], key];
-        }
-        else
-        {
-            [result appendFormat:@"@property (nonatomic) %@ %@;\n", [ObjectRuntime nameForType:type], key];
-        }
-		
-    }
+    NSDictionary *properties = [ObjectRuntime classPropertiesFor:clazz];
+//    for (NSString *key in properties)
+//    {
+//        NSString *type = [properties objectForKey:key];
+//
+//        if ([type characterAtIndex:0] == '@')
+//        {
+//            [result appendFormat:@"@property (strong, nonatomic) %@ *%@;\n", [ObjectRuntime nameForType:type], key];
+//        }
+//        else
+//        {
+//            [result appendFormat:@"@property (nonatomic) %@ %@;\n", [ObjectRuntime nameForType:type], key];
+//        }
+//
+//    }
+    
+    NSLog(@"%@", properties);
     
     return result;
 }
